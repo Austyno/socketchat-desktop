@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="js/jquery-3.2.1.min.js" ></script>
+    <script src="js/bootstrap.min.js"></script>
+    <!-- <link rel="stylesheet" href="css/font-awesome.css">     -->
+<head>
+  <title>Call Center</title>
+  <style>
+   
+  </style>
+  
+</head>
+<body>
+  
+        
+
+<div class="container" id="container">
+    <center><h4>Enquiries</h4></center>
+    <div class="col-lg-6" id="disp"></div>
+</div>
+
+  
+
+      
+    
+    
+  
+    <script src="js/popper.min.js" ></script>
+    
+    <!-- <script src="js/socket.io.js" ></script> -->
+    
+
+  <script>
+
+      var container = document.getElementById('container');
+      var div = document.createElement('div');
+      let disp = document.getElementById('disp');
+      let show = document.createElement('div');
+      const {getCurrentWindow} = require('electron');
+
+      const io = require('socket.io-client');
+      var socket = io('http://localhost:9000');
+
+      socket.on('connect',()=>{
+        
+      });
+
+      socket.emit('user','callcenter');
+      socket.emit('getOfflineMsg','callcenter');
+
+      socket.on('reconnect',()=>{
+        
+        socket.emit('user','callcenter');
+        socket.emit('getOfflineMsg','callcenter');
+        console.log("socket reconnected");
+    })
+
+     
+
+      socket.on('yourNum',(userId)=>{
+        console.log(userId);
+      });
+
+      
+      socket.on('callcenterOfflineMsg',(data)=>{
+        // console.log(data);
+       for(var i = 0; i<data.length; i++){
+            show.innerHTML += `<div class="col-md-4 mb-3" style="display:inline-block;">
+                                  <div class="card" id="${data[i].msgId}">
+                                      <div class="card-header">From :  ${data[i].msgFrom}</div>
+                                      <div class="card-content" style="padding:5px">${data[i].query}</div>
+                                      <div class"card-footer" style="margin:10px"><button class="btn btn-success btn-sm" data-toggle="modal" data-target="replyModal">Reply</button></div>
+                                  </div>
+                                </div>`
+        disp.appendChild(show); 
+                
+       }
+       
+      });
+
+      socket.on('newQuery',(data)=>{
+        let newDiv = document.createElement('div');
+        // newDiv.classList = 'col-lg-6';
+        newDiv.innerHTML = `<div class="col-md-4 mb-3" style="display:inline-block;">
+                              <div class="card" id="${data.msgId}">
+                                  <div class="card-header">From:  ${data.clientId}</div>
+                                  <div class="card-content" style="padding:5px">${data.query}</div>
+                                  <div class"card-footer" style="margin:10px"><button class="btn btn-success btn-sm" data-toggle="modal" data-target="replyModal">Reply</button></div>
+                              </div>
+                            </div>`
+        disp.appendChild(newDiv); 
+      })
+      
+    </script>
+<script src="js/jquery-3.2.1.min.js" ></script>
+<script src="js/bootstrap.min.js"></script>
+<script>
+  // $(function () { $('.container').click(function(){
+  //       $('#myModal').modal('show')
+  //     })});
+
+  disp.addEventListener('click',(e)=>{
+    var clicked = e.target;
+    //get msg attr from clicked
+    var msgid = clicked.parentElement.parentElement.getAttribute('id');
+    var msgFrom = clicked.parentElement.parentElement.firstChild.nextElementSibling.innerText;
+    var query = clicked.parentElement.parentElement.firstChild.nextElementSibling.nextElementSibling.innerText;
+
+    //send to modal
+    document.getElementById('query').innerText ="Question :"+ query;
+    document.getElementById('myModalLabel').innerText = msgFrom;
+
+    //Show modal
+       $('#myModal').modal('show');
+
+    // modal vars
+    var replyBtn = document.getElementById('replyBtn');
+    var replyMsg = document.getElementById('replyMsg').value;
+    var replyTo = msgFrom.split(':')[1];
+    var replyMsgId = msgid;
+
+    
+
+    
+
+        replyBtn.addEventListener('click',(e)=>{
+          e.preventDefault();
+
+          var data = {
+                      replyMsg: document.getElementById('replyMsg').value,
+                      replyTo: replyTo,
+                      replyMsgId: msgid,
+                      replyQuery : query
+                }
+
+          socket.emit('replyFromCallCenter',data);
+      
+            // console.log(replyMsgId);
+          $('#myModal').modal('hide');
+
+          //remove replied msg from call center UI
+           clicked.parentElement.parentElement.parentElement.remove();
+           document.getElementById('query').innerText ='';
+          document.getElementById('myModalLabel').innerText = '';
+          // window.reload();
+          // getCurrentWindow().reload();
+        });
+    
+  })
+
+</script>
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <div class="modal-title" id="query"></div>
+            <h5 class="modal-title" id="myModalLabel"></h5>
+            
+          </div>
+          <textarea id="replyMsg" cols="45" placeholder="enter reply message here" autofocus style="width:95%;margin-left:10px;margin-right:10px"></textarea>
+              <div class="modal-footer">
+                 <button type="button" id="replyBtn" class="btn btn-success">Send Reply </button>
+              </div>
+           </div><!-- /.modal-content -->
+      </div>
+    </div><!-- /.modal -->
+
+</body>
+</html>

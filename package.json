@@ -1,0 +1,16 @@
+{
+  "name": "socdesktop",
+  "version": "1.0.0",
+  "description": "Desktop for the socketchat for Police Pension",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "Austyno",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^4.0.4",
+    "socket.io": "^2.2.0"
+  }
+}
